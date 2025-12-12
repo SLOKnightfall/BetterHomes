@@ -1,5 +1,5 @@
 -- GUIUtils.lua
--- Centralized GUI helper functions for DecorTreasureHunt
+-- Centralized GUI helper functions
 
 local addonName, addon = ...
 local AceGUI = LibStub("AceGUI-3.0")

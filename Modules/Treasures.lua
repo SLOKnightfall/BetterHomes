@@ -1,5 +1,3 @@
--- MyAddon.lua
--- Main addon logic for DecorTreasureHunt
 
 local addonName, addon = ...
 addon = LibStub("AceAddon-3.0"):GetAddon(addonName)
@@ -137,7 +135,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Get completion stats for a quest list.
-local function getCompletion(list)
+local function GetQuestCompletion(list)
 	local completed, count = 0, 0
 	for questID in pairs(list) do
 		if C_QuestLog.IsQuestFlaggedCompleted(questID) then
@@ -189,7 +187,7 @@ function addon:RefreshListView()
 			end
 		end
 
-		local completed, total = getCompletion(mapData)
+		local completed, total = GetQuestCompletion(mapData)
 		if mapID == MAP_RAZORWIND and hordeHeading then
 			hordeHeading:SetText(addon.GUI_FormatProgress("Horde", completed, total, "00ff00"))   -- green
 		elseif allianceHeading then

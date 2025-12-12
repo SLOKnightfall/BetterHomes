@@ -25,26 +25,35 @@ local options = {
 					type = "toggle",
 					name = L["AUTO_ACCEPT"],
 					desc = L["AUTO_ACCEPT_DESC"],
-					get = function() return DecorTreasureHuntDB.autoAccept end,
-					set = function(_, val) DecorTreasureHuntDB.autoAccept = val end,
+					get = function() return addon.db.autoAccept end,
+					set = function(_, val) addon.db.autoAccept = val end,
 				},
 				autoTurnIn = {
 					type = "toggle",
 					name = L["AUTO_TURN_IN"],
 					desc = L["AUTO_TURN_IN_DESC"],
-					get = function() return DecorTreasureHuntDB.autoTurnIn end,
-					set = function(_, val) DecorTreasureHuntDB.autoTurnIn = val end,
+					get = function() return addon.db.autoTurnIn end,
+					set = function(_, val) addon.db.autoTurnIn = val end,
 				},
 				printText = {
 					type = "toggle",
 					name = L["PRINT_TEXT"],
 					desc = L["PRINT_TEXT_DESC"],
-					get = function() return DecorTreasureHuntDB.printText end,
-					set = function(_, val) DecorTreasureHuntDB.printText = val end,
+					get = function() return addon.db.printText end,
+					set = function(_, val) addon.db.printText = val end,
 				},
 			},
 		},
 	},
+}
+
+ profile = {
+    modules = {
+      ['*'] = {
+        enabled = true,
+        visible = true,
+      },
+  }
 }
 
 ------------------------------------------------------------
@@ -84,7 +93,7 @@ function addon:OnLoadEvent(event, ...)
 end
 
 function addon:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("BetterHomes_Options")
+	self.db = LibStub("AceDB-3.0"):New("BetterHomes_Options", defaults)
 	AceConfig:RegisterOptionsTable(addonName, options)
 	AceConfigDialog:AddToBlizOptions(addonName, addonName)
 	--options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(db)
