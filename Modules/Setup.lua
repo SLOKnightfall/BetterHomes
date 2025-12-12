@@ -55,10 +55,6 @@ function addon:OnLoadEvent(event, ...)
 	if event ~= "ADDON_LOADED" then return end
 	local loadedAddon = ...
 
-	if not DecorTreasureHuntDB then
-		DecorTreasureHuntDB = { autoAccept = true, autoTurnIn = true }
-	end
-
 	if loadedAddon == "Blizzard_HouseEditor" then
 		C_Timer.After(.5, function() addon:InitStorage() end)
 

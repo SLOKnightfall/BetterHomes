@@ -19,38 +19,42 @@ local MAP_NAMES = {
 --------------------------------------------------------------------------------
 -- Waypoint Helpers
 --------------------------------------------------------------------------------
-local tomtomWaypointUid
+local currentWayPoint
+local TomTomLoaded = false
 
 --- Print formatted addon output.
-local function printOutput(text)
+local function PrintOutput(text)
 	print("|cffe6c619" .. addonName .. ":|r " .. text)
 end
 
+
 --- Set a user waypoint and optionally a TomTom waypoint.
-local function setUserWaypoint(x, y)
+local function SetUserWaypoint(x, y)
 	local mapId = C_Map.GetBestMapForUnit("player")
 	if not mapId or (mapId ~= MAP_RAZORWIND and mapId ~= MAP_FOUNDERS) then return end
 
 	C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapId, x, y))
 	C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 
-	if TomTom and TomTom.AddWaypoint then
-		tomtomWaypointUid = TomTom:AddWaypoint(mapId, x, y, { title = addonName })
+	if TomTomLoaded and TomTom.AddWaypoint then
+		currentWayPoint = TomTom:AddWaypoint(mapId, x, y, { title = "Housing Treasure" })
 	end
-	printOutput(L.WAYPOINT_SET)
+	PrintOutput(L.WAYPOINT_SET)
 end
 
 --- Clear TomTom waypoint if present.
-local function clearTomTomWaypoint()
-	if TomTom and TomTom.RemoveWaypoint then
-		TomTom:RemoveWaypoint(tomtomWaypointUid)
+local function ClearTomTomWaypoint()
+	if TomTom.RemoveWaypoint then
+		TomTom:RemoveWaypoint(currentWayPoint)
 	end
 end
 
 --- Clear user waypoint and TomTom waypoint.
-local function clearUserWaypoint()
+local function ClearUserWaypoint()
 	C_Map.ClearUserWaypoint()
-	clearTomTomWaypoint()
+	if TomTomLoaded then
+		ClearTomTomWaypoint()
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -59,61 +63,68 @@ end
 
 --- Handle addon events.
 function addon:OnQuestEvent(event, name, questID)
+	local function AcceptQuestEvent(questId)
+		local mapId = C_Map.GetBestMapForUnit("player")
+		local data = addon.QuestData[mapId][questId]
+		SetUserWaypoint(data[1], data[2])
+		self:RegisterEvent("QUEST_COMPLETE", "OnEvent")
+		return
+	end
 
 	if event == "PLAYER_ENTERING_WORLD" then
+		TomTomLoaded = C_AddOns.IsAddOnLoaded("TomTom")
 		for i = 1, C_QuestLog.GetNumQuestLogEntries() do
 			local info = C_QuestLog.GetInfo(i)
 			if info and not info.isHeader then
 				local mapId = C_Map.GetBestMapForUnit("player")
 				local data = addon.QuestData[mapId] and addon.QuestData[mapId][info.questID]
 				if data then
-					questId = info.questID
-					event = "QUEST_ACCEPTED"
-					break
+					AcceptQuestEvent(info.questID)
+					return
 				end
 			end
 		end
 	end
 
 	if event == "GOSSIP_SHOW" then
-		local guid = UnitGUID("npc")
-		if not guid or IsShiftKeyDown() or not DecorTreasureHuntDB.autoAccept then return end
+		local unitGUID = UnitGUID("npc")
+		if not self.db.autoAccept or not unitGUID then return end
 
-		local npcId = tonumber((select(6, strsplit("-", guid))))
-		if npcId == RAZORWIND_NPC or npcId == FOUNDERS_NPC then
-			local mapId = C_Map.GetBestMapForUnit("player")
-			for _, data in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
-				if addon.QuestData[mapId][data.questID] then
-					self:RegisterEvent("QUEST_DETAIL", "OnEvent")
-					C_GossipInfo.SelectAvailableQuest(data.questID)
-					break
-				end
+		local npcId = tonumber((select(6, strsplit("-", unitGUID))))
+		if RAZORWIND_NPC ~= npcId and FOUNDERS_NPC ~= npcId  then return end
+		local mapId = C_Map.GetBestMapForUnit("player")
+		for _, data in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
+			if addon.QuestData[mapId][data.questID] then
+				self:RegisterEvent("QUEST_DETAIL", "OnEvent")
+				C_GossipInfo.SelectAvailableQuest(data.questID)
+				break
 			end
 		end
 		return
 	elseif event == "QUEST_DETAIL" then
+		PrintOutput(L.QUEST_ACCEPTED)
 		AcceptQuest()
-		printOutput(L.QUEST_ACCEPTED)
 		return
 	elseif event == "QUEST_ACCEPTED" then
-		local mapId = C_Map.GetBestMapForUnit("player")
-		local data = addon.QuestData[mapId][questId]
-		setUserWaypoint(data[1], data[2])
-		self:RegisterEvent("QUEST_COMPLETE", "OnEvent")
+		AcceptQuestEvent(questID)
 	elseif event == "QUEST_COMPLETE" then
-		if IsShiftKeyDown() or not DecorTreasureHuntDB.autoTurnIn then return end
-		GetQuestReward(1)
-		self:UnregisterEvent("QUEST_COMPLETE")
-		self:UnregisterEvent("QUEST_DETAIL")
-		printOutput(L.QUEST_TURNIN)
-		return
+		if self.db.autoTurnIn then
+			if self.db.printText then
+				PrintOutput(L.QUEST_TURNIN)
+			end
+
+			GetQuestReward(1)
+			self:UnregisterEvent("QUEST_COMPLETE")
+			self:UnregisterEvent("QUEST_DETAIL")
+			return
+		end
 	elseif event == "QUEST_FINISHED" then
-		clearUserWaypoint()
+		ClearUserWaypoint()
 		self:UnregisterEvent("QUEST_DETAIL")
 		self:UnregisterEvent("QUEST_COMPLETE")
 		return
 	elseif event == "QUEST_REMOVED" then
-		clearUserWaypoint()
+		ClearUserWaypoint()
 		self:UnregisterEvent("QUEST_COMPLETE")
 	elseif event == "QUEST_LOG_UPDATE" then
 		addon:RefreshListView()
