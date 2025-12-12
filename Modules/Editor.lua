@@ -8,8 +8,6 @@ local addonName, addon = ...
 addon = LibStub("AceAddon-3.0"):GetAddon(addonName)
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 
-local eventframe = CreateFrame("Frame", nil, UIParent)
-
 ------------------------------------------------------------
 -- Custom Overlay Frame
 ------------------------------------------------------------
@@ -60,6 +58,7 @@ end
 local function updateText(element)
     local info = element.entryInfo
     if info then
+        --print (addon:IsFromProfession(info.entryID.recordID))
         local totalStored, totalPlaced = info.numStored, info.numPlaced
         local totalOwned = totalStored + totalPlaced
 
@@ -77,7 +76,7 @@ local function updateText(element)
         elseif totalOwned == totalPlaced then
             element.overlay1.circleText:SetText("(" .. totalPlaced .. ")")
         else
-            element.overlay1.circleText:SetText(totalOwned .. " (" .. totalPlaced .. ")")
+            element.overlay1.circleText:SetText(totalStored .. " (" .. totalPlaced .. ")")
         end
     else
         element.InfoText:Hide()
@@ -89,7 +88,7 @@ end
 local function updateTooltip(element)
     local info = element.entryInfo
     if info then
-        print(info.sourceText)
+        --print(info.sourceText)
         GameTooltip_AddNormalLine(GameTooltip, info.sourceText)
     end
 end
@@ -98,7 +97,7 @@ end
 -- Initialization
 ------------------------------------------------------------
 -- Initializes overlays for each frame in the Housing Storage Panel.
-local function init()
+function addon:InitStorage()
     HouseEditorFrame.StoragePanel.OptionsContainer.ScrollBox:ForEachFrame(function(element)
         if not element.overlay1 then
             local overlay1 = CreateCustomFrame(element)
@@ -109,6 +108,7 @@ local function init()
             hooksecurefunc(element, "UpdateVisuals", function() updateText(element) end)
             hooksecurefunc(element, "AddTooltipLines", function() updateTooltip(element) end)
 
+            updateText(element)
             -- Reposition the customize icon
             element.CustomizeIcon:ClearAllPoints()
             element.CustomizeIcon:SetPoint("TOPLEFT", 5, -6)
@@ -116,10 +116,11 @@ local function init()
     end)
 
     -- Example: create a standalone circle frame
-    local circleFrame = CreateFrame("Frame", nil, UIParent, "HouseEditorPlacedDecorListTemplate")
-    circleFrame:SetPoint("CENTER", UIParent, "CENTER")
-    circleFrame:Show()
+    --local circleFrame = CreateFrame("Frame", nil, UIParent, "HouseEditorPlacedDecorListTemplate")
+    --circleFrame:SetPoint("CENTER", UIParent, "CENTER")
+    --circleFrame:Show()
 end
+
 
 ------------------------------------------------------------
 -- Dashboard Tabs
@@ -130,9 +131,10 @@ local function TabHandler(tab, button, upInside)
         HousingDashboardFrame:OnTabButtonClicked(tab)
         if tab.tooltipText == L["VENDORS"] then
             addon:GenerateVendorListView()
-
-        else
+        elseif tab.tooltipText == L["TREASURE_LIST"] then
             addon:GenerateTreasureListView() 
+        else
+            addon:GenerateProfessionListView()
         end
     end
 end
@@ -162,50 +164,12 @@ local function CreateCatalogTab(HDF, anchor, titleKey, activeAtlas, inactiveAtla
     return tab, contentFrame
 end
 
+
+
 -- Initializes custom tabs in the Housing Dashboard.
-local function init2()
+function addon:InitDashboard()
     local HDF = HousingDashboardFrame
-    HDF.catalogTab2, HDF.CatalogContent2 = CreateCatalogTab(HDF, HDF.CatalogTabButton, "TREASURE_LIST")
-    HDF.catalogTab3, HDF.CatalogContent3 = CreateCatalogTab(HDF, HDF.catalogTab2.tabButton, "VENDORS")
+    HDF.catalogTab1, HDF.CatalogContent1 = CreateCatalogTab(HDF, HDF.CatalogTabButton, "VENDORS")
+    HDF.catalogTab2, HDF.CatalogContent2 = CreateCatalogTab(HDF, HDF.catalogTab1.tabButton, "Professions")
+    HDF.catalogTab3, HDF.CatalogContent3 = CreateCatalogTab(HDF, HDF.catalogTab2.tabButton, "TREASURE_LIST")
 end
-
-------------------------------------------------------------
--- Event Handling
-------------------------------------------------------------
--- Handles addon load events for Blizzard Housing UI addons.
-local function This_OnEvent(self, event, ...)
-    if event ~= "ADDON_LOADED" then return end
-    local loadedAddon = ...
-
-    if loadedAddon == "Blizzard_HouseEditor" then
-        C_Timer.After(1, init)
-
-        -- Override market tab visibility logic
-        function HouseEditorFrame.StoragePanel:UpdateMarketTabVisibility()
-            local marketEnabled = true -- Placeholder for C_Housing.IsHousingMarketEnabled()
-            local showingDecor = true -- Placeholder for editor mode check
-            local showMarketTab = marketEnabled and showingDecor
-
-            self.TabSystem:SetTabShown(self.marketTabID, showMarketTab)
-            if showMarketTab then
-                self.TabSystem:SetTabEnabled(self.marketTabID, true, HOUSING_MARKET_TAB_UNAVAILABLE_TEXT)
-                self:UpdateMarketTabNotification()
-            elseif self:IsInMarketTab() then
-                self:SetTab(self.storageTabID)
-            end
-
-            EventRegistry:TriggerEvent("HousingMarketTab.VisibilityUpdated")
-        end
-
-        -- Add a "Placed" tab
-        HouseEditorFrame.StoragePanel.PlacedTabID = HouseEditorFrame.StoragePanel:AddNamedTab("Placed")
-
-    elseif loadedAddon == "Blizzard_HousingDashboard" then
-        C_Timer.After(1, init2)
-    end
-end
-
--- Register event handler
-eventframe:RegisterEvent("ADDON_LOADED")
-eventframe:SetScript("OnEvent", This_OnEvent)
-

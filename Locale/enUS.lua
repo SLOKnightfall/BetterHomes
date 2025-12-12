@@ -26,3 +26,5 @@ L["VENDORS"] = "Vendors"
 L["QUEST_ACCEPTED"] = "Quest automatically accepted."
 L["QUEST_TURNIN"] = "Quest automatically turned in."
 L["WAYPOINT_SET"] = "Waypoint set to treasure location."
+
+L["CLICK_TO_SET"] = "Click to set a Waypoint"

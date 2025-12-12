@@ -31,7 +31,8 @@ Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 Locale/enUS.lua
 
 Modules/Setup.lua
-Main.lua
+Modules/Editor.lua
+Modules/Catalog.lua
 Modules/GUIUtils.lua
 Modules/Treasures.lua
 Modules/Vendors.lua

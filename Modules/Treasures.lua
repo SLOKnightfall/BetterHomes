@@ -58,14 +58,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Handle addon events.
-function addon:OnEvent(event, name, questID)
-	if event == "ADDON_LOADED" and name == addonName then
-		self:UnregisterEvent(event)
-		if not DecorTreasureHuntDB then
-			DecorTreasureHuntDB = { autoAccept = true, autoTurnIn = true }
-		end
-		return
-	end
+function addon:OnQuestEvent(event, name, questID)
 
 	if event == "PLAYER_ENTERING_WORLD" then
 		for i = 1, C_QuestLog.GetNumQuestLogEntries() do
@@ -126,14 +119,7 @@ function addon:OnEvent(event, name, questID)
 		addon:RefreshListView()
 	end
 end
--- Register events
-addon:RegisterEvent("ADDON_LOADED", "OnEvent")
-addon:RegisterEvent("PLAYER_ENTERING_WORLD", "OnEvent")
-addon:RegisterEvent("GOSSIP_SHOW", "OnEvent")
-addon:RegisterEvent("QUEST_ACCEPTED", "OnEvent")
-addon:RegisterEvent("QUEST_REMOVED", "OnEvent")
-addon:RegisterEvent("QUEST_FINISHED", "OnEvent")
-addon:RegisterEvent("QUEST_LOG_UPDATE", "OnEvent")
+
 
 --------------------------------------------------------------------------------
 -- Quest Completion Helper
@@ -163,9 +149,9 @@ end
 --- Generate treasure list view.
 function addon:GenerateTreasureListView()
 	if not self.LISTWINDOW then
-		local window = addon.GUI_CreateInlineGroup(HousingDashboardFrame.CatalogContent2, "Flow")
-				window:SetPoint("TOPLEFT", HousingDashboardFrame.CatalogContent2, "TOPLEFT", 0, -35)
-		window:SetPoint("BOTTOMRIGHT", HousingDashboardFrame.CatalogContent2.PreviewFrame, "BOTTOMLEFT", 10)
+		local window = addon.GUI_CreateInlineGroup(HousingDashboardFrame.CatalogContent3, "Flow")
+		window:SetPoint("TOPLEFT", HousingDashboardFrame.CatalogContent3, "TOPLEFT", 0, -35)
+		window:SetPoint("BOTTOMRIGHT", HousingDashboardFrame.CatalogContent3.PreviewFrame, "BOTTOMLEFT", 10)
 		self.LISTWINDOW = window
 
 		local scrollContainer = addon.GUI_CreateSimpleGroup(window, "Fill")
