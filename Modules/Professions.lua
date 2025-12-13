@@ -12,7 +12,7 @@ function addon:BuildProfessionTable()
 	local professionData = addon.ProfessionData
 	for profession, p_data in pairs(professionData) do
 		for expansion, ex_data in pairs(p_data) do
-			for item, i_data in ipairs(p_data) do
+			for item, i_data in ipairs(ex_data) do
 				id_to_profession[i_data.id] = profession
 			end
 		end

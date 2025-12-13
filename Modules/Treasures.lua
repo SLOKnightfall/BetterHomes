@@ -22,7 +22,9 @@ local TomTomLoaded = false
 
 --- Print formatted addon output.
 local function PrintOutput(text)
-	print("|cffe6c619" .. addonName .. ":|r " .. text)
+	if addon.db.global.printText then
+		print(text)
+	end
 end
 
 
@@ -63,9 +65,9 @@ end
 function addon:OnQuestEvent(event, name, questID)
 	local function AcceptQuestEvent(questId)
 		local mapId = C_Map.GetBestMapForUnit("player")
-		local data = addon.QuestData[mapId][questId]
+		local data = addon.QuestData[tostring(mapId)][tostring(questId)]
 		SetUserWaypoint(data[1], data[2])
-		self:RegisterEvent("QUEST_COMPLETE", "OnEvent")
+		self:RegisterEvent("QUEST_COMPLETE", "OnQuestEvent")
 		return
 	end
 
@@ -75,7 +77,7 @@ function addon:OnQuestEvent(event, name, questID)
 			local info = C_QuestLog.GetInfo(i)
 			if info and not info.isHeader then
 				local mapId = C_Map.GetBestMapForUnit("player")
-				local data = addon.QuestData[mapId] and addon.QuestData[mapId][info.questID]
+				local data = addon.QuestData[tostring(mapId)] and addon.QuestData[tostring(mapId)][tostring(info.questID)]
 				if data then
 					AcceptQuestEvent(info.questID)
 					return
@@ -86,31 +88,26 @@ function addon:OnQuestEvent(event, name, questID)
 
 	if event == "GOSSIP_SHOW" then
 		local unitGUID = UnitGUID("npc")
-		if not self.db.autoAccept or not unitGUID then return end
+		if not addon.db.global.autoAccept or not unitGUID  then return end
 
 		local npcId = tonumber((select(6, strsplit("-", unitGUID))))
 		if RAZORWIND_NPC ~= npcId and FOUNDERS_NPC ~= npcId  then return end
-		local mapId = C_Map.GetBestMapForUnit("player")
+		local mapId = tostring(C_Map.GetBestMapForUnit("player"))
 		for _, data in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
-			if addon.QuestData[mapId][data.questID] then
-				self:RegisterEvent("QUEST_DETAIL", "OnEvent")
-				C_GossipInfo.SelectAvailableQuest(data.questID)
+			if addon.QuestData[mapId][tostring(data.questID)] then
+				self:RegisterEvent("QUEST_DETAIL", "OnQuestEvent")
+				C_GossipInfo.SelectAvailableQuest(tonumber(data.questID))
 				break
 			end
 		end
 		return
 	elseif event == "QUEST_DETAIL" then
-		PrintOutput(L.QUEST_ACCEPTED)
 		AcceptQuest()
 		return
 	elseif event == "QUEST_ACCEPTED" then
-		AcceptQuestEvent(questID)
+		AcceptQuestEvent(name)
 	elseif event == "QUEST_COMPLETE" then
-		if self.db.autoTurnIn then
-			if self.db.printText then
-				PrintOutput(L.QUEST_TURNIN)
-			end
-
+		if addon.db.global.autoTurnIn then
 			GetQuestReward(1)
 			self:UnregisterEvent("QUEST_COMPLETE")
 			self:UnregisterEvent("QUEST_DETAIL")

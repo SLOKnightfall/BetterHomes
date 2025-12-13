@@ -9,7 +9,7 @@ L["AUTO_QUEST_DESC"] = "Settings for automatic quest handling."
 
 -- Options
 L["AUTO_ACCEPT"] = "Auto Accept"
-L["AUTO_ACCEPT_DESC"] = "Automatically accept quests from NPCs."
+L["AUTO_ACCEPT_DESC"] = "Automatically accept quests."
 
 L["AUTO_TURN_IN"] = "Auto Turn In"
 L["AUTO_TURN_IN_DESC"] = "Automatically turn in completed quests."
@@ -21,6 +21,7 @@ L["PRINT_TEXT_DESC"] = "Print status messages in chat."
 -- Tabs
 L["TREASURE_LIST"] = "Treasure List"
 L["VENDORS"] = "Vendors"
+L["PROFESSIONS"] = "Professions"
 
 -- Announcements
 L["QUEST_ACCEPTED"] = "Quest automatically accepted."

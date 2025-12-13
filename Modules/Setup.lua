@@ -19,41 +19,61 @@ local options = {
 			type = "group",
 			name = L["AUTO_QUEST"],
 			desc = L["AUTO_QUEST_DESC"],
-			inline = true,
+			inline = FALSE,
 			args = {
 				autoAccept = {
 					type = "toggle",
 					name = L["AUTO_ACCEPT"],
 					desc = L["AUTO_ACCEPT_DESC"],
-					get = function() return addon.db.autoAccept end,
-					set = function(_, val) addon.db.autoAccept = val end,
+					get = function() return addon.db.global.autoAccept end,
+					set = function(_, val) addon.db.global.autoAccept = val end,
 				},
 				autoTurnIn = {
 					type = "toggle",
 					name = L["AUTO_TURN_IN"],
 					desc = L["AUTO_TURN_IN_DESC"],
-					get = function() return addon.db.autoTurnIn end,
-					set = function(_, val) addon.db.autoTurnIn = val end,
+					get = function() return addon.db.global.autoTurnIn end,
+					set = function(_, val) addon.db.global.autoTurnIn = val end,
 				},
-				printText = {
+				Text = {
 					type = "toggle",
 					name = L["PRINT_TEXT"],
 					desc = L["PRINT_TEXT_DESC"],
-					get = function() return addon.db.printText end,
-					set = function(_, val) addon.db.printText = val end,
+					get = function() return addon.db.global.printText end,
+					set = function(_, val) addon.db.global.printText = val end,
 				},
 			},
 		},
+		catelog = {
+            type = "group",
+            name = "Catelog",
+            order = 10,
+            args = {
+                itemName = {
+                    type = "toggle",
+                    name = "Show Item Name",
+                    desc = "Toggle display of item names in the catalog.",
+                    order = 1,
+                    get = function() return addon.db.global.showItemName end,
+                    set = function(_, val) addon.db.global.showItemName = val end,
+                },
+                icon = {
+                    type = "toggle",
+                    name = "Show Icon",
+                    desc = "Toggle display of item icons in the catalog.",
+                    order = 2,
+                    get = function() return addon.db.global.showIcon end,
+                    set = function(_, val) addon.db.global.showIcon = val end,
+                },
+            },
+        },
 	},
 }
 
- profile = {
-    modules = {
-      ['*'] = {
-        enabled = true,
-        visible = true,
-      },
-  }
+local defaults = {
+	global  = {
+	   ['*'] = true,
+	}
 }
 
 ------------------------------------------------------------
@@ -88,12 +108,12 @@ function addon:OnLoadEvent(event, ...)
 		--HouseEditorFrame.StoragePanel.PlacedTabID = HouseEditorFrame.StoragePanel:AddNamedTab("Placed")
 
 	elseif loadedAddon == "Blizzard_HousingDashboard" then
-		C_Timer.After(0.5, function() print("ini") addon:InitDashboard(); addon:InitCatalog() end)
+		C_Timer.After(0.5, function() addon:InitDashboard(); addon:InitCatalog() end)
 	end
 end
 
 function addon:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("BetterHomes_Options", defaults)
+	self.db = LibStub("AceDB-3.0"):New("BetterHomes_Options", defaults, true)
 	AceConfig:RegisterOptionsTable(addonName, options)
 	AceConfigDialog:AddToBlizOptions(addonName, addonName)
 	--options.args.profile = LibStub("AceDBOptions-3.0"):GetOptionsTable(db)
