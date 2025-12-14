@@ -14,6 +14,12 @@ L["AUTO_ACCEPT_DESC"] = "Automatically accept quests."
 L["AUTO_TURN_IN"] = "Auto Turn In"
 L["AUTO_TURN_IN_DESC"] = "Automatically turn in completed quests."
 
+L["AUTO_WAYPOINT"] = "Auto Set Waypoint"
+L["AUTO_WAYPOINT_DESC"] = "Automatically waypoint to treasure."
+
+L["HIDE_WAYPOINT"] = "Hide Waypoint"
+L["HIDE_WAYPOINT_DESC"] = "Hides the waypoint coords on the treasure list."
+
 L["PRINT_TEXT"] = "Print Announcements"
 L["PRINT_TEXT_DESC"] = "Print status messages in chat."
 

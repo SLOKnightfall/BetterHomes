@@ -35,6 +35,13 @@ local options = {
 					get = function() return addon.db.global.autoTurnIn end,
 					set = function(_, val) addon.db.global.autoTurnIn = val end,
 				},
+				autoWayPoint = {
+					type = "toggle",
+					name = L["AUTO_WAYPOINT"],
+					desc = L["AUTO_WAYPOINT_DESC"],
+					get = function() return addon.db.global.autoWayPoint end,
+					set = function(_, val) addon.db.global.autoWayPoint = val end,
+				},
 				Text = {
 					type = "toggle",
 					name = L["PRINT_TEXT"],
@@ -45,34 +52,50 @@ local options = {
 			},
 		},
 		catelog = {
-            type = "group",
-            name = "Catelog",
-            order = 10,
-            args = {
-                itemName = {
-                    type = "toggle",
-                    name = "Show Item Name",
-                    desc = "Toggle display of item names in the catalog.",
-                    order = 1,
-                    get = function() return addon.db.global.showItemName end,
-                    set = function(_, val) addon.db.global.showItemName = val end,
-                },
-                icon = {
-                    type = "toggle",
-                    name = "Show Icon",
-                    desc = "Toggle display of item icons in the catalog.",
-                    order = 2,
-                    get = function() return addon.db.global.showIcon end,
-                    set = function(_, val) addon.db.global.showIcon = val end,
-                },
-            },
-        },
+			type = "group",
+			name = "Catelog",
+			order = 10,
+			args = {
+				itemName = {
+					type = "toggle",
+					name = "Show Item Name",
+					desc = "Toggle display of item names in the catalog.",
+					order = 1,
+					get = function() return addon.db.global.showItemName end,
+					set = function(_, val) addon.db.global.showItemName = val end,
+				},
+				icon = {
+					type = "toggle",
+					name = "Show Icon",
+					desc = "Toggle display of item icons in the catalog.",
+					order = 2,
+					get = function() return addon.db.global.showIcon end,
+					set = function(_, val) addon.db.global.showIcon = val end,
+				},
+
+			},
+		},
+		quests = {
+			type = "group",
+			name = "Treasure Quest List",
+			order = 20,
+			args = {
+				hideWayPoint = {
+					type = "toggle",
+					name = L["HIDE_WAYPOINT"],
+					desc = L["HIDE_WAYPOINT_DESC"],
+					get = function() return addon.db.global.hideWayPoint end,
+					set = function(_, val) addon.db.global.hideWayPoint = val end,
+				},
+			},
+		},
 	},
 }
 
 local defaults = {
 	global  = {
 	   ['*'] = true,
+	   hideWayPoint = false,
 	}
 }
 
@@ -130,7 +153,7 @@ function addon:OnEnable()
 	addon:RegisterEvent("ADDON_LOADED", "OnLoadEvent")
 	addon:RegisterEvent("PLAYER_ENTERING_WORLD", "OnQuestEvent")
 	addon:RegisterEvent("GOSSIP_SHOW", "OnQuestEvent")
-	addon:RegisterEvent("QUEST_ACCEPTED", "OnQuestEvent")
+	
 	addon:RegisterEvent("QUEST_REMOVED", "OnQuestEvent")
 	addon:RegisterEvent("QUEST_FINISHED", "OnQuestEvent")
 	addon:RegisterEvent("QUEST_LOG_UPDATE", "OnQuestEvent")

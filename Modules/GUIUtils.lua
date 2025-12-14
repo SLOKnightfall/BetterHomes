@@ -135,7 +135,9 @@ function addon.GUI_CreateQuestRow(questID, data, scroll)
 	local isCompleted = C_QuestLog.IsQuestFlaggedCompleted(questID)
 
 	-- Default display name (white, no totals)
+
 	local displayName = string.format("%s - X:%d Y:%d", name, x, y)
+
 
 	label:SetFullWidth(true)
 	label:SetHeight(30)
@@ -156,14 +158,18 @@ function addon.GUI_CreateQuestRow(questID, data, scroll)
 			if totalOwned > 0 then
 				if isCompleted then
 					-- Green text if completed and has items
-					displayName = string.format("|cff00ff00%s|r (%d) - X:%d Y:%d", name, totalOwned, x, y)
 				else
 					-- Yellow text if not completed but has items
-					displayName = string.format("|cffffff00%s|r (%d) - X:%d Y:%d", name, totalOwned, x, y)
+					displayName = string.format("|cffffff00%s|r (%d)", name, totalOwned)
 				end
 			else
 				-- No items, keep white text
-				displayName = string.format("%s - X:%d Y:%d", name, x, y)
+				displayName = string.format("%s", name)
+			end
+
+			if not addon.db.global.hideWayPoint then 
+				displayName = displayName ..string.format(" - X:%d Y:%d", x, y)
+
 			end
 			
 		end

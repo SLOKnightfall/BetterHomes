@@ -19,6 +19,8 @@ local MAP_NAMES = {
 --------------------------------------------------------------------------------
 local currentWayPoint
 local TomTomLoaded = false
+local currentQuest
+local waypointSet = false
 
 --- Print formatted addon output.
 local function PrintOutput(text)
@@ -27,9 +29,10 @@ local function PrintOutput(text)
 	end
 end
 
-
 --- Set a user waypoint and optionally a TomTom waypoint.
 local function SetUserWaypoint(x, y)
+	if not addon.db.global.autoWayPoint then return end
+
 	local mapId = C_Map.GetBestMapForUnit("player")
 	if not mapId or (mapId ~= MAP_RAZORWIND and mapId ~= MAP_FOUNDERS) then return end
 
@@ -39,6 +42,7 @@ local function SetUserWaypoint(x, y)
 	if TomTomLoaded and TomTom.AddWaypoint then
 		currentWayPoint = TomTom:AddWaypoint(mapId, x, y, { title = "Housing Treasure" })
 	end
+	waypointSet = true
 	PrintOutput(L.WAYPOINT_SET)
 end
 
@@ -50,10 +54,13 @@ local function ClearTomTomWaypoint()
 end
 
 --- Clear user waypoint and TomTom waypoint.
-local function ClearUserWaypoint()
-	C_Map.ClearUserWaypoint()
-	if TomTomLoaded then
-		ClearTomTomWaypoint()
+local function ClearUserWaypoint(questId)
+	if waypointSet == questId then
+		waypointSet = false
+		C_Map.ClearUserWaypoint()
+		if TomTomLoaded then
+			ClearTomTomWaypoint()
+		end
 	end
 end
 
@@ -64,10 +71,12 @@ end
 --- Handle addon events.
 function addon:OnQuestEvent(event, name, questID)
 	local function AcceptQuestEvent(questId)
+		currentQuest = questID 
 		local mapId = C_Map.GetBestMapForUnit("player")
 		local data = addon.QuestData[tostring(mapId)][tostring(questId)]
 		SetUserWaypoint(data[1], data[2])
 		self:RegisterEvent("QUEST_COMPLETE", "OnQuestEvent")
+		self:UnregisterEvent("QUEST_ACCEPTED")
 		return
 	end
 
@@ -88,39 +97,50 @@ function addon:OnQuestEvent(event, name, questID)
 
 	if event == "GOSSIP_SHOW" then
 		local unitGUID = UnitGUID("npc")
-		if not addon.db.global.autoAccept or not unitGUID  then return end
-
+		if not unitGUID  then return end
 		local npcId = tonumber((select(6, strsplit("-", unitGUID))))
 		if RAZORWIND_NPC ~= npcId and FOUNDERS_NPC ~= npcId  then return end
 		local mapId = tostring(C_Map.GetBestMapForUnit("player"))
 		for _, data in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
 			if addon.QuestData[mapId][tostring(data.questID)] then
 				self:RegisterEvent("QUEST_DETAIL", "OnQuestEvent")
-				C_GossipInfo.SelectAvailableQuest(tonumber(data.questID))
-				break
+				if addon.db.global.autoAccept then
+					C_GossipInfo.SelectAvailableQuest(tonumber(data.questID))
+					break
+				end
 			end
 		end
 		return
 	elseif event == "QUEST_DETAIL" then
+		addon:RegisterEvent("QUEST_ACCEPTED", "OnQuestEvent")
 		AcceptQuest()
 		return
 	elseif event == "QUEST_ACCEPTED" then
 		AcceptQuestEvent(name)
 	elseif event == "QUEST_COMPLETE" then
-		if addon.db.global.autoTurnIn then
-			GetQuestReward(1)
+		if name == currentQuest then
+			currentQuest = nil
+			if addon.db.global.autoTurnIn then
+				GetQuestReward(1)
+			end
 			self:UnregisterEvent("QUEST_COMPLETE")
 			self:UnregisterEvent("QUEST_DETAIL")
 			return
 		end
 	elseif event == "QUEST_FINISHED" then
-		ClearUserWaypoint()
-		self:UnregisterEvent("QUEST_DETAIL")
-		self:UnregisterEvent("QUEST_COMPLETE")
-		return
+		if name == currentQuest then 
+			ClearUserWaypoint()
+			currentQuest = nil
+			self:UnregisterEvent("QUEST_DETAIL")
+			self:UnregisterEvent("QUEST_COMPLETE")
+			return
+		end
 	elseif event == "QUEST_REMOVED" then
-		ClearUserWaypoint()
-		self:UnregisterEvent("QUEST_COMPLETE")
+		if name == currentQuest then 
+			ClearUserWaypoint()
+			self:UnregisterEvent("QUEST_COMPLETE")
+			currentQuest = nil
+		end
 	elseif event == "QUEST_LOG_UPDATE" then
 		addon:RefreshListView()
 	end
@@ -148,7 +168,7 @@ end
 --------------------------------------------------------------------------------
 
 --- Create a quest row in the scroll frame.
-function addon:CreateQuestRow(questID, data, scroll)
+local function CreateQuestRow(questID, data, scroll)
 	addon.GUI_CreateQuestRow(questID, data, scroll)
 end
 
@@ -193,7 +213,7 @@ function addon:RefreshListView()
 
 		for questID, data in pairs(mapData) do
 			if data then
-				self:CreateQuestRow(questID, data, self.scroll)
+				CreateQuestRow(questID, data, self.scroll)
 			end
 		end
 	end
