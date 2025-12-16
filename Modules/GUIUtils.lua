@@ -5,6 +5,7 @@ local addonName, addon = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale(addonName)
 
+local vendorFilterBonus = addon.vendorFilterBonus
 
 --------------------------------------------------------------------------------
 -- Item Row
@@ -19,11 +20,15 @@ function addon.GUI_CreateItemRow(id, data, scroll)
 	local info  = C_HousingCatalog.GetCatalogEntryInfoByRecordID(1, data.id, true)
 	local entry = info and C_HousingCatalog.GetCatalogEntryInfo(info.entryID) or {}
 	local totalOwned, stored, placed = 0,0,0
-
+	vendorFilterBonus = addon.vendorFilterBonus
 	if info then
+		local firstAcquisitionBonus = info.firstAcquisitionBonus ~= 0
 		totalOwned = (entry.numStored or 0) + (entry.numPlaced or 0)
-
+		if (vendorFilterBonus and not firstAcquisitionBonus) then return end
 		local name = string.format("%s (%d)", data.name, totalOwned)
+		if firstAcquisitionBonus then
+			name = string.format("|cnLIGHTBLUE_FONT_COLOR:%s (%d)|r", data.name, totalOwned)
+		end
 		label:SetText(name)
 		label:SetFullWidth(true)
 		label:SetImage(info.iconTexture, 0.15, 0.85, 0.15, 0.85)
@@ -114,7 +119,9 @@ function addon.GUI_CreateVendorRow(data, scroll)
 	scroll:AddChild(divider)
 
 	for _, itemData in pairs(data.items or {}) do
-		addon.GUI_CreateItemRow(itemData.id, itemData, scroll)
+		if addon:FilterData(itemData.id, addon.filteredVendors) then
+			addon.GUI_CreateItemRow(itemData.id, itemData, scroll)
+		end
 	end
 
 	coords:SetCallback("OnLeave", function() GameTooltip:Hide() end)
@@ -382,3 +389,29 @@ end
 
 -- Register the new widget type (version can be bumped if you refine it later)
 AceGUI:RegisterWidgetType("TreeOnlyGroup", Constructor, 1)
+
+
+function addon:OwnedCount(data)
+	local count = 0
+	local ownedCount = 0
+	local items = data.items
+	for _, i_data in ipairs(items) do
+		local info  = C_HousingCatalog.GetCatalogEntryInfoByRecordID(1, i_data.id, true)
+		local entry = info and C_HousingCatalog.GetCatalogEntryInfo(info.entryID) or {}
+		local totalOwned = 0
+
+		if info then
+				local filterMatch = addon:FilterData(i_data.id, addon.filteredVendors)
+
+			if filterMatch then
+				totalOwned = (entry.numStored or 0) + (entry.numPlaced or 0)
+				ownedCount = ownedCount + (totalOwned > 0 and 1 or 0)
+				count = count + 1
+			else
+				--return false
+			end
+		end
+	end
+
+	return ownedCount, count
+end

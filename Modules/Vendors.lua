@@ -28,14 +28,14 @@ local function onClick(id)
 
 	local function FindVendorByName(searchName)
 	  for expansion, zones in pairs(addon.VendorData) do
-		for zone, vendorList in pairs(zones) do
-		  for _, vendor in ipairs(vendorList) do
-			if vendor.name == searchName then
-				return vendor
+			for zone, vendorList in pairs(zones) do
+			  for _, vendor in ipairs(vendorList) do
+					if vendor.name == searchName then
+						return vendor
 
+					end
+			  end
 			end
-		  end
-		end
 	  end
 	  return nil -- not found
 	end
@@ -50,6 +50,7 @@ end
 --------------------------------------------------------------------------------
 -- Main GUI Construction
 --------------------------------------------------------------------------------
+-- local vendorFilterBonus
 
 --- Generate the main vendor list view.
 function addon:GenerateVendorListView()
@@ -82,7 +83,7 @@ function addon:GenerateVendorListView()
 		self.vendorScroll = vendorScroll
 	end
 
-	self:RefreshVendorListView()
+		self:RefreshVendorListView()
 end
 
 local function OwnedCount(data)
@@ -95,10 +96,16 @@ local function OwnedCount(data)
 		local totalOwned = 0
 
 		if info then
-			totalOwned = (entry.numStored or 0) + (entry.numPlaced or 0)
-			ownedCount = ownedCount + (totalOwned > 0 and 1 or 0)
+				local filterMatch = addon:FilterData(i_data.id, addon.filteredVendors)
+
+			if filterMatch then
+				totalOwned = (entry.numStored or 0) + (entry.numPlaced or 0)
+				ownedCount = ownedCount + (totalOwned > 0 and 1 or 0)
+				count = count + 1
+			else
+				--return false
+			end
 		end
-		count = count + 1
 	end
 
 	return ownedCount, count
@@ -107,8 +114,8 @@ end
 local function ExpandPath(widget, statusTbl, pathParts)
   local path = ""
   for i, part in ipairs(pathParts) do
-	path = (i == 1) and part or (path .. "\001" .. part)  -- AceGUI path separator
-	statusTbl.groups[path] = true
+		path = (i == 1) and part or (path .. "\001" .. part)  -- AceGUI path separator
+		statusTbl.groups[path] = true
   end
   widget:RefreshTree()
   widget:SelectByValue(path) -- select last (deepest) node
@@ -118,10 +125,10 @@ end
 -- Refresh Tree
 --------------------------------------------------------------------------------
 local status = { groups = {}, selected = nil }
-
 --- Refresh the tree view with vendor data.
 function addon:RefreshVendorListView()
 	if not self.tree then return end
+	addon.filteredVendors = HousingDashboardFrame.CatalogContent1.Filters.catalogSearcher:GetCatalogSearchResults()
 	self.tree:ReleaseChildren()
 	local treeData = {}
 	self.tree:SetStatusTable(status)
@@ -134,10 +141,12 @@ function addon:RefreshVendorListView()
 			local z_table = addon.GUI_CreateTreeEntry(zone, zone, true)
 			for vendor, v_data in pairs(z_data) do
 				local owned, total = OwnedCount(v_data)
-				z_owned = z_owned + owned
-				z_total = z_total + total
-				table.insert(z_table.children, addon.GUI_CreateTreeEntry(v_data.name,format("%s - %d/%d",v_data.name, owned, total  ), false))
 
+					if not owned == false then
+						z_owned = z_owned + owned
+						z_total = z_total + total
+						table.insert(z_table.children, addon.GUI_CreateTreeEntry(v_data.name,format("%s - %d/%d",v_data.name, owned, total  ), false))
+					end
 			end
 			x_owned = z_owned + x_owned
 			x_total = z_total + x_total

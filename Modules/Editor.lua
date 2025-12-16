@@ -166,13 +166,3 @@ local function CreateCatalogTab(HDF, anchor, titleKey, activeAtlas, inactiveAtla
 	table.insert(HDF.tabs, tab)
 	return tab, contentFrame
 end
-
-
-
--- Initializes custom tabs in the Housing Dashboard.
-function addon:InitDashboard()
-	local HDF = HousingDashboardFrame
-	HDF.catalogTab1, HDF.CatalogContent1 = CreateCatalogTab(HDF, HDF.CatalogTabButton, "VENDORS")
-	HDF.catalogTab2, HDF.CatalogContent2 = CreateCatalogTab(HDF, HDF.catalogTab1.tabButton, "Professions")
-	HDF.catalogTab3, HDF.CatalogContent3 = CreateCatalogTab(HDF, HDF.catalogTab2.tabButton, "TREASURE_LIST")
-end

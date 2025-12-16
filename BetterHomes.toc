@@ -1,5 +1,5 @@
 ## Interface: 110205, 110207
-## Category: Misc
+## Category: Decor
 ## Title: BetterHomes (@project-version@)
 ## Version: @project-version@
 ## Author: SLOKnightfall
@@ -34,6 +34,7 @@ Modules/Setup.lua
 Modules/Editor.lua
 Modules/Catalog.lua
 Modules/GUIUtils.lua
+Modules/Filters.lua
 Modules/Treasures.lua
 Modules/Vendors.lua
 Modules/Professions.lua

@@ -47,14 +47,14 @@ local function onClick(id)
 	
 	local function FindByName(searchName)
 	  for profession, xpac in pairs(addon.ProfessionData) do
-		for xpac, items in pairs(xpac) do
-		  for _, item in ipairs(items) do
-			if item.name == searchName then
-				return item
+			for xpac, items in pairs(xpac) do
+			  for _, item in ipairs(items) do
+					if item.name == searchName then
+						return item
 
+					end
+			  end
 			end
-		  end
-		end
 	  end
 	  return nil -- not found
 	end
@@ -137,6 +137,7 @@ local status = { groups = {}, selected = nil }
 function addon:RefreshProfessionListView()
 	if not self.prof_tree then return end
 	self.prof_tree:ReleaseChildren()
+	addon.filteredProfessions = HousingDashboardFrame.CatalogContent2.Filters.catalogSearcher:GetCatalogSearchResults()
 
 	local treeData = {}
 	self.prof_tree:SetStatusTable(status)
@@ -148,18 +149,19 @@ function addon:RefreshProfessionListView()
 			local z_owned, z_total = 0,0
 			local z_table = addon.GUI_CreateTreeEntry(zone, zone, true)
 			for vendor, v_data in pairs(z_data) do
-				local owned, total = 0,0 OwnedCount(v_data)
-				z_owned = z_owned + owned
-				z_total = z_total + total
+				if addon:FilterData(v_data.id, addon.filteredProfessions) then
+					local owned, total = OwnedCount(v_data)
+					z_owned = z_owned + owned
+					z_total = z_total + total
 
-				local info  = C_HousingCatalog.GetCatalogEntryInfoByRecordID(1, v_data.id, true)
-				local iconTexture = nil
-				if info then
-					iconTexture = info.iconTexture
-				end
+					local info  = C_HousingCatalog.GetCatalogEntryInfoByRecordID(1, v_data.id, true)
+					local iconTexture = nil
+					if info then
+						iconTexture = info.iconTexture
+					end
 				
-				table.insert(z_table.children, addon.GUI_CreateTreeEntry(v_data.name,format("%s - %d",v_data.name, owned ), false, iconTexture))
-
+					table.insert(z_table.children, addon.GUI_CreateTreeEntry(v_data.name,format("%s - %d",v_data.name, owned ), false, iconTexture))
+				end
 			end
 			x_owned = z_owned + x_owned
 			x_total = z_total + x_total

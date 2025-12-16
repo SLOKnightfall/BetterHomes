@@ -160,7 +160,7 @@ end
 ------------------------------------------------------------
 local function updateText(element)
 	if not element or not element.entryInfo or not element.overlay1 then return end
-	 info = element.entryInfo
+	local info = element.entryInfo
 	if addon.db.global.showItemName then
 		element.overlay1.text:SetText(info.name)
 		element.overlay1.text:Show()
@@ -298,6 +298,8 @@ local function TabHandler(tab, button, upInside)
 	end
 end
 
+
+
 local function CreateCatalogTab(HDF, anchor, titleKey, activeAtlas, inactiveAtlas)
 	local tabButton = CreateFrame("Frame", nil, HDF, "QuestLogTabButtonTemplate")
 	tabButton.displayMode = "QuestLogDisplayMode.Quests"
@@ -311,8 +313,21 @@ local function CreateCatalogTab(HDF, anchor, titleKey, activeAtlas, inactiveAtla
 	contentFrame:SetAllPoints()
 	contentFrame.OptionsContainer:Hide()
 	contentFrame.Categories:Hide()
-	contentFrame.Filters:Hide()
+	--contentFrame.Filters:Hide()
 	contentFrame.SearchBox:Hide()
+	--contentFrame.Filters.TryCallSearcherFunc = addon.TryCallSearcherFunc
+	contentFrame.Filters.Initialize = addon.FilterDropdownInitialize
+	contentFrame.Filters:Initialize(contentFrame.Filters.catalogSearcher, contentFrame.Filters)
+	if anchor == HDF.CatalogTabButton then 
+		contentFrame.Filters.catalogSearcher:SetResultsUpdatedCallback(function() addon:RefreshVendorListView(); end);
+
+	elseif anchor == HDF.catalogTab1.tabButton then 
+		contentFrame.Filters.catalogSearcher:SetResultsUpdatedCallback(function() addon:RefreshProfessionListView(); end);
+
+	elseif anchor == HDF.catalogTab2.tabButton then 
+		--contentFrame.Filters.catalogSearcher:SetResultsUpdatedCallback(function() addon:RefreshVendorListView(); end);
+		contentFrame.Filters:Hide()
+	end
 
 	local tab = {
 		tabButton = tabButton,
@@ -329,4 +344,29 @@ function addon:InitDashboard()
 	HDF.catalogTab1, HDF.CatalogContent1 = CreateCatalogTab(HDF, HDF.CatalogTabButton, "VENDORS")
 	HDF.catalogTab2, HDF.CatalogContent2 = CreateCatalogTab(HDF, HDF.catalogTab1.tabButton, "PROFESSIONS", "Profession", "Profession;")
 	HDF.catalogTab3, HDF.CatalogContent3 = CreateCatalogTab(HDF, HDF.catalogTab2.tabButton, "TREASURE_LIST","QuestLog-tab-icon-quest","QuestLog-tab-icon-quest-inactive")
+
+	-- Post-hook the PreviewCatalogEntryInfo method
+	hooksecurefunc(HDF.CatalogContent.PreviewFrame, "PreviewCatalogEntryInfo", function(self, entryInfo)
+			-- Your custom logic runs AFTER Blizzard's function executes
+			zzz=entryInfo
+			local source = addon:IsFromProfession(entryInfo.entryID.recordID)
+			if source then
+				HDF.CatalogContent.PreviewFrame.TextContainer.SourceInfo:SetText("|cFFFFD200Profession: |r"..source)
+				HDF.CatalogContent.PreviewFrame.TextContainer.SourceInfo:Show()
+				HDF.CatalogContent.PreviewFrame.TextContainer:Layout();
+			end
+		end)
+
 end
+
+--[[
+HousingDashboardFrame.CatalogContent1.Filters.catalogSearcher:GetCatalogSearchResults()
+HousingDashboardFrame.CatalogContent.OptionsContainer:SetCatalogData({
+ {
+    recordID=14461,
+    subtypeIdentifier=0,
+    entrySubtype=4,
+    entryType=1
+  },
+})
+]]--
