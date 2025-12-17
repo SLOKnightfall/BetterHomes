@@ -19,7 +19,7 @@ local MAP_NAMES = {
 --------------------------------------------------------------------------------
 local currentWayPoint
 local TomTomLoaded = false
-local currentQuest
+local currentQuest = false
 local waypointSet = false
 
 --- Print formatted addon output.
@@ -32,7 +32,6 @@ end
 --- Set a user waypoint and optionally a TomTom waypoint.
 local function SetUserWaypoint(x, y)
 	if not addon.db.global.autoWayPoint then return end
-
 	local mapId = C_Map.GetBestMapForUnit("player")
 	if not mapId or (mapId ~= MAP_RAZORWIND and mapId ~= MAP_FOUNDERS) then return end
 
@@ -55,7 +54,7 @@ end
 
 --- Clear user waypoint and TomTom waypoint.
 local function ClearUserWaypoint(questId)
-	if waypointSet == questId then
+	if tonumber(currentQuest) == tonumber(questId) then
 		waypointSet = false
 		C_Map.ClearUserWaypoint()
 		if TomTomLoaded then
@@ -70,12 +69,14 @@ end
 
 --- Handle addon events.
 function addon:OnQuestEvent(event, name, questID)
-	local function AcceptQuestEvent(questId)
-		currentQuest = questID 
+	local function AcceptQuestEvent(ID)
+		currentQuest = tonumber(ID)
 		local mapId = C_Map.GetBestMapForUnit("player")
-		local data = addon.QuestData[tostring(mapId)][tostring(questId)]
+		local data = addon.QuestData[tostring(mapId)][tostring(ID)]
 		SetUserWaypoint(data[1], data[2])
 		self:RegisterEvent("QUEST_COMPLETE", "OnQuestEvent")
+		self:RegisterEvent("QUEST_REMOVED", "OnQuestEvent")
+
 		self:UnregisterEvent("QUEST_ACCEPTED")
 		return
 	end
@@ -98,12 +99,14 @@ function addon:OnQuestEvent(event, name, questID)
 	if event == "GOSSIP_SHOW" then
 		local unitGUID = UnitGUID("npc")
 		if not unitGUID  then return end
+
 		local npcId = tonumber((select(6, strsplit("-", unitGUID))))
 		if RAZORWIND_NPC ~= npcId and FOUNDERS_NPC ~= npcId  then return end
 		local mapId = tostring(C_Map.GetBestMapForUnit("player"))
 		for _, data in ipairs(C_GossipInfo.GetAvailableQuests() or {}) do
 			if addon.QuestData[mapId][tostring(data.questID)] then
 				self:RegisterEvent("QUEST_DETAIL", "OnQuestEvent")
+				self:RegisterEvent("QUEST_ACCEPTED", "OnQuestEvent")
 				if addon.db.global.autoAccept then
 					C_GossipInfo.SelectAvailableQuest(tonumber(data.questID))
 					break
@@ -112,8 +115,10 @@ function addon:OnQuestEvent(event, name, questID)
 		end
 		return
 	elseif event == "QUEST_DETAIL" then
-		addon:RegisterEvent("QUEST_ACCEPTED", "OnQuestEvent")
-		AcceptQuest()
+		if addon.db.global.autoAccept then
+			--self:RegisterEvent("QUEST_ACCEPTED", "OnQuestEvent")
+			AcceptQuest()
+		end
 		return
 	elseif event == "QUEST_ACCEPTED" then
 		AcceptQuestEvent(name)
@@ -121,14 +126,14 @@ function addon:OnQuestEvent(event, name, questID)
 		if name == currentQuest then
 			currentQuest = nil
 			if addon.db.global.autoTurnIn then
-				GetQuestReward(1)
+				GetQuestReward(1)		
 			end
 			self:UnregisterEvent("QUEST_COMPLETE")
 			self:UnregisterEvent("QUEST_DETAIL")
-			return
 		end
+		return
 	elseif event == "QUEST_FINISHED" then
-		if name == currentQuest then 
+		if tonumber(name) == tonumber(currentQuest) then 
 			ClearUserWaypoint()
 			currentQuest = nil
 			self:UnregisterEvent("QUEST_DETAIL")
@@ -136,8 +141,8 @@ function addon:OnQuestEvent(event, name, questID)
 			return
 		end
 	elseif event == "QUEST_REMOVED" then
-		if name == currentQuest then 
-			ClearUserWaypoint()
+		if tonumber(name) == tonumber(currentQuest) then 
+			ClearUserWaypoint(tonumber(name))
 			self:UnregisterEvent("QUEST_COMPLETE")
 			currentQuest = nil
 		end
