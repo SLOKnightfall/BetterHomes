@@ -29,6 +29,8 @@ Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 
 #Locale
 Locale/enUS.lua
+Locale/ruRU.lua
+Locale/zhTW.lua
 
 Modules/Setup.lua
 Modules/Editor.lua

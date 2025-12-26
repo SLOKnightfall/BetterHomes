@@ -54,6 +54,7 @@ end
 
 --- Clear user waypoint and TomTom waypoint.
 local function ClearUserWaypoint(questId)
+	if not addon.db.global.autoWayPoint then return end
 	if tonumber(currentQuest) == tonumber(questId) then
 		waypointSet = false
 		C_Map.ClearUserWaypoint()
@@ -123,11 +124,14 @@ function addon:OnQuestEvent(event, name, questID)
 	elseif event == "QUEST_ACCEPTED" then
 		AcceptQuestEvent(name)
 	elseif event == "QUEST_COMPLETE" then
-		if name == currentQuest then
+		if not addon.db.global.autoTurnIn then return end
+
+		local mapId = C_Map.GetBestMapForUnit("player")
+		local readyForTurnIn = C_QuestLog.ReadyForTurnIn(currentQuest)
+
+		if (mapID == MAP_RAZORWIND or mapID == MAP_FOUNDERS) and readyForTurnIn then
 			currentQuest = nil
-			if addon.db.global.autoTurnIn then
-				GetQuestReward(1)		
-			end
+			GetQuestReward(1)		
 			self:UnregisterEvent("QUEST_COMPLETE")
 			self:UnregisterEvent("QUEST_DETAIL")
 		end
