@@ -111,21 +111,21 @@ function addon:OnLoadEvent(event, ...)
 		C_Timer.After(.5, function() addon:InitStorage() end)
 
 		-- Override market tab visibility logic
-		function HouseEditorFrame.StoragePanel:UpdateMarketTabVisibility()
-			local marketEnabled = true -- Placeholder for C_Housing.IsHousingMarketEnabled()
-			local showingDecor = true -- Placeholder for editor mode check
-			local showMarketTab = marketEnabled and showingDecor
+		--function HouseEditorFrame.StoragePanel:UpdateMarketTabVisibility()
+			-- marketEnabled = true -- Placeholder for C_Housing.IsHousingMarketEnabled()
+			--local showingDecor = true -- Placeholder for editor mode check
+			--local showMarketTab = marketEnabled and showingDecor
 
-			self.TabSystem:SetTabShown(self.marketTabID, showMarketTab)
-			if showMarketTab then
-				self.TabSystem:SetTabEnabled(self.marketTabID, true, HOUSING_MARKET_TAB_UNAVAILABLE_TEXT)
-				self:UpdateMarketTabNotification()
-			elseif self:IsInMarketTab() then
-				self:SetTab(self.storageTabID)
-			end
+			--self.TabSystem:SetTabShown(self.marketTabID, showMarketTab)
+			--if showMarketTab then
+			--	self.TabSystem:SetTabEnabled(self.marketTabID, true, HOUSING_MARKET_TAB_UNAVAILABLE_TEXT)
+			--	self:UpdateMarketTabNotification()
+			--elseif self:IsInMarketTab() then
+				--self:SetTab(self.storageTabID)
+			--end
 
-			EventRegistry:TriggerEvent("HousingMarketTab.VisibilityUpdated")
-		end
+			--EventRegistry:TriggerEvent("HousingMarketTab.VisibilityUpdated")
+		--end
 
 		-- Add a "Placed" tab
 		--HouseEditorFrame.StoragePanel.PlacedTabID = HouseEditorFrame.StoragePanel:AddNamedTab("Placed")
